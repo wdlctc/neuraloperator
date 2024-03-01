@@ -1,4 +1,5 @@
 import torch
+import torch.nn as nn
 import matplotlib.pyplot as plt
 import sys
 from neuralop.models import TFNO
@@ -10,6 +11,9 @@ import torch.multiprocessing as mp
 
 import torch.distributed as dist
 from torch.nn.parallel import DistributedDataParallel as DDP
+from fairscale.nn.data_parallel import FullyShardedDataParallel
+
+import torch
 
 import argparse
 
@@ -32,9 +36,9 @@ def benchmark(rank, args, world_size):
     )
     data_processor = data_processor.to(device)
     
-    model = TFNO(n_modes=(32, 32), hidden_channels=32, projection_channels=64, factorization='tucker', rank=0.42)
+    model = TFNO(n_modes=(32, 32), hidden_channels=32, projection_channels=64, factorization='tucker', rank=0.42, n_layers=64)
     model = model.to(device)
-    model = DDP(model)
+    model = FullyShardedDataParallel(model)
     
     n_params = count_model_params(model)
     print(f'\nOur model has {n_params} parameters.')
