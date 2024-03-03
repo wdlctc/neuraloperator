@@ -153,7 +153,7 @@ To run the distributed training, use the following main function:
             nprocs=num_devices,
             join=True,
         )
-        
+
 Results
 -------
 
@@ -169,13 +169,65 @@ Below is an example of the visualized results, showing the input features, the t
 
 From left to right, each row presents the input `x`, the ground-truth output `y`, and the model's prediction. The close resemblance between the ground-truth and the predictions indicates the model's effectiveness in capturing the underlying physical processes modeled by the Darcy Flow equations.
 
+Memory Analysis
+---------------
+
+To understand the scaling behavior and efficiency of Fully Sharded Data Parallel (FSDP) compared to Distributed Data Parallel (DDP), we conduct a memory analysis by training larger models with incremental steps. The process involves the following setup:
+
+1. **Data Loading**: We load a small Darcy Flow dataset to keep the focus on the memory usage rather than the dataset size:
+
+.. code-block:: python
+
+    train_loader, test_loaders, data_processor = load_darcy_flow_small(
+        n_train=10, batch_size=32,
+        test_resolutions=[16, 32], n_tests=[100, 50],
+        test_batch_sizes=[32, 32],
+        positional_encoding=True
+    )
+    data_processor = data_processor.to(device)
+
+2. **Model Initialization**: We initialize a TFNO model with specified dimensions and parameters:
+
+.. code-block:: python
+
+    model = TFNO(n_modes=(64, 64), hidden_channels=256, projection_channels=512, factorization='tucker', rank=0.42)
+    model = model.to(device)
+
+### Comparative Memory Usage
+
+To analyze the memory usage, we train the model using both DDP and FSDP strategies, referring to the code in `./neural_ddp.py` and `./neural_fsdp.py`. These scripts illustrate the setup and execution of training using the respective parallelism strategies.
+
+### Results
+
+Our training experiments on a configuration of 4 GPUs yielded the following memory usage results:
+
+- **Distributed Data Parallel (DDP)**: The memory usage peaked at **10.498061GB**.
+- **Fully Sharded Data Parallel (FSDP)**: The memory usage was significantly reduced, peaking at **6.566593GB**.
+
 ### Analysis
 
-By examining the plotted figures, we can qualitatively assess the model's performance. Ideally, the model's predictions should closely match the ground-truth data, indicating a high level of accuracy in solving the partial differential equations represented by the dataset.
+The memory analysis clearly demonstrates the advantage of using FSDP for training large models. By efficiently sharding the model parameters across all available GPUs, FSDP reduces the overall memory footprint, allowing for the training of larger models or enabling the use of larger batch sizes.
 
-These visual results, combined with quantitative metrics such as loss during training and validation, provide a comprehensive view of the model's capabilities and areas for improvement. Further fine-tuning of the model parameters and training procedure can lead to even more accurate predictions.
+This reduction in memory usage is particularly important when scaling up the training process to accommodate more complex models or larger datasets. FSDP's ability to minimize memory consumption without compromising training speed or model accuracy represents a significant step forward in distributed deep learning.
 
 Conclusion
 ----------
 
 The ability to visualize the outcomes of neural operator models, such as the TFNO trained in this tutorial, is essential for verifying their effectiveness and for identifying potential areas of improvement. As we continue to develop and refine these models, incorporating advanced techniques like Fully Sharded Data Parallel (FSDP) and handling the challenges of complex tensor operations, we move closer to solving increasingly complex problems across various scientific and engineering domains.
+
+
+add memory analysis:
+    1, to analysis the scaling behvior, we need to train larger model with small step
+    train_loader, test_loaders, data_processor = load_darcy_flow_small(
+            n_train=10, batch_size=32,
+            test_resolutions=[16, 32], n_tests=[100, 50],
+            test_batch_sizes=[32, 32],
+            positional_encoding=True
+    )
+    data_processor = data_processor.to(device)
+    
+    model = TFNO(n_modes=(64, 64), hidden_channels=256, projection_channels=512, factorization='tucker', rank=0.42)
+    model = model.to(device)
+
+    2, then the model with DDP and FSDP (ref cod of ./neural_ddp.py and ./neural_fsdp.py), it would show the memory usage
+    3 our training result on 4 GPUs, DDP achieve 10.498061GB where FSDP achieve 6.566593GB
