@@ -39,6 +39,8 @@ data_processor = data_processor.to(device)
 model = TFNO(n_modes=(16, 16), hidden_channels=32, projection_channels=64, factorization='tucker', rank=0.42)
 model = model.to(device)
 
+print(model)
+
 n_params = count_model_params(model)
 print(f'\nOur model has {n_params} parameters.')
 sys.stdout.flush()

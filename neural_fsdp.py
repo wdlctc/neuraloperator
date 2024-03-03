@@ -7,10 +7,13 @@ from neuralop import Trainer
 from neuralop.datasets import load_darcy_flow_small
 from neuralop.utils import count_model_params
 from neuralop import LpLoss, H1Loss
+from neuralop.layers.fno_block import FNOBlocks
+from neuralop.layers.mlp import MLP
 import torch.multiprocessing as mp
 
 import torch.distributed as dist
 from torch.distributed.fsdp import FullyShardedDataParallel
+from torch.distributed.fsdp.wrap import CustomPolicy
 # from fairscale.nn.data_parallel import FullyShardedDataParallel
 # from fairscale.nn.wrap import wrap, enable_wrap, auto_wrap, default_auto_wrap_policy
 
