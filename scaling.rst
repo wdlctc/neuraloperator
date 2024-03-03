@@ -215,19 +215,3 @@ Conclusion
 
 The ability to visualize the outcomes of neural operator models, such as the TFNO trained in this tutorial, is essential for verifying their effectiveness and for identifying potential areas of improvement. As we continue to develop and refine these models, incorporating advanced techniques like Fully Sharded Data Parallel (FSDP) and handling the challenges of complex tensor operations, we move closer to solving increasingly complex problems across various scientific and engineering domains.
 
-
-add memory analysis:
-    1, to analysis the scaling behvior, we need to train larger model with small step
-    train_loader, test_loaders, data_processor = load_darcy_flow_small(
-            n_train=10, batch_size=32,
-            test_resolutions=[16, 32], n_tests=[100, 50],
-            test_batch_sizes=[32, 32],
-            positional_encoding=True
-    )
-    data_processor = data_processor.to(device)
-    
-    model = TFNO(n_modes=(64, 64), hidden_channels=256, projection_channels=512, factorization='tucker', rank=0.42)
-    model = model.to(device)
-
-    2, then the model with DDP and FSDP (ref cod of ./neural_ddp.py and ./neural_fsdp.py), it would show the memory usage
-    3 our training result on 4 GPUs, DDP achieve 10.498061GB where FSDP achieve 6.566593GB
