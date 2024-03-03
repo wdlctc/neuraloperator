@@ -3,6 +3,26 @@ Scaling TFNO Training with Fully Sharded Data Parallel (FSDP)
 
 In this tutorial, we will demonstrate how to efficiently scale the training of Temporal Fourier Neural Operators (TFNO) using Fully Sharded Data Parallel (FSDP) in PyTorch. This approach is particularly useful for training large models that do not fit into a single GPU memory.
 
+Challenges of Scaling Neural Operators
+--------------------------------------
+
+Scaling neural operator models, like the Temporal Fourier Neural Operator (TFNO) used in this tutorial, introduces a unique set of challenges that are not as prevalent in traditional deep learning models. One of the key challenges lies in the use of complex tensors within neural operators.
+
+Most existing parallelism and distributed training frameworks are primarily designed to support floating-point tensors. This limitation poses a problem for neural operators, which often leverage complex tensors to efficiently represent and manipulate data in applications like solving partial differential equations.
+
+### Handling Complex Tensors
+
+To overcome this challenge, a crucial step is the conversion of complex tensors into floating-point tensors. This conversion allows neural operators to utilize the wide range of optimizations and capabilities available in open-source libraries designed for floating-point computations. However, this conversion process must be carefully managed to preserve the integrity of the data and the efficiency of the computations.
+
+### Customized Tensorfy Library
+
+To facilitate this conversion, we employ a customized library, tentatively named ``tensorfy``. This library is designed to seamlessly transform complex tensors into a format compatible with floating-point libraries while maintaining the mathematical properties and operations specific to complex numbers.
+
+The ``tensorfy`` library abstracts away the complexity of handling these conversions, allowing developers to focus on the design and optimization of their neural operator models. It ensures that the model can scale effectively across multiple GPUs using techniques like Fully Sharded Data Parallel (FSDP) without compromising the accuracy or efficiency of the computations.
+
+.. note::
+    The ``tensorfy`` library is slated for open-source release in the future. This library represents a significant step forward in making neural operator models more accessible and scalable, bridging the gap between specialized computational requirements and the capabilities of existing parallelism frameworks.
+
 Prerequisites
 -------------
 
@@ -63,14 +83,14 @@ Next, we load the Darcy Flow dataset and initialize our TFNO model:
 .. code-block:: python
 
         train_loader, test_loaders, data_processor = load_darcy_flow_small(
-                n_train=10, batch_size=32,
+                n_train=1000, batch_size=32,
                 test_resolutions=[16, 32], n_tests=[100, 50],
                 test_batch_sizes=[32, 32],
                 positional_encoding=True
         )
         data_processor = data_processor.to(device)
         
-        model = TFNO(n_modes=(64, 64), hidden_channels=256, projection_channels=512, factorization='tucker', rank=0.42)
+        model = TFNO(n_modes=(16, 16), hidden_channels=32, projection_channels=64, factorization='tucker', rank=0.42)
         model = model.to(device)
 
 FSDP Configuration
@@ -133,8 +153,29 @@ To run the distributed training, use the following main function:
             nprocs=num_devices,
             join=True,
         )
+        
+Results
+-------
+
+After completing the training process, we evaluate the model's performance by visualizing the inputs, the ground-truth output, and the model's predictions. This visualization helps in assessing the model's accuracy and its ability to generalize from the training data to unseen test data.
+
+### Visualization of Model Predictions
+
+Below is an example of the visualized results, showing the input features, the true solution (ground-truth), and the model's predictions for several test samples. These visualizations are crucial for understanding how well the model has learned to predict the flow fields from the given inputs.
+
+.. image:: ./my_figure.png
+   :align: center
+   :alt: Inputs, ground-truth output, and model predictions
+
+From left to right, each row presents the input `x`, the ground-truth output `y`, and the model's prediction. The close resemblance between the ground-truth and the predictions indicates the model's effectiveness in capturing the underlying physical processes modeled by the Darcy Flow equations.
+
+### Analysis
+
+By examining the plotted figures, we can qualitatively assess the model's performance. Ideally, the model's predictions should closely match the ground-truth data, indicating a high level of accuracy in solving the partial differential equations represented by the dataset.
+
+These visual results, combined with quantitative metrics such as loss during training and validation, provide a comprehensive view of the model's capabilities and areas for improvement. Further fine-tuning of the model parameters and training procedure can lead to even more accurate predictions.
 
 Conclusion
 ----------
 
-This tutorial has demonstrated how to scale the training of TFNO models using PyTorch's FSDP. By sharding model parameters across multiple GPUs, we can train larger models that would otherwise not fit in the memory of a single GPU.
+The ability to visualize the outcomes of neural operator models, such as the TFNO trained in this tutorial, is essential for verifying their effectiveness and for identifying potential areas of improvement. As we continue to develop and refine these models, incorporating advanced techniques like Fully Sharded Data Parallel (FSDP) and handling the challenges of complex tensor operations, we move closer to solving increasingly complex problems across various scientific and engineering domains.
