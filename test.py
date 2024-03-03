@@ -86,6 +86,8 @@ def benchmark(rank, args, world_size):
             )
         )
 
+    break
+
 def parse_args():
     parser = argparse.ArgumentParser(description="benchmark")
     parser.add_argument("--max_batch", type=int, default=4, help="Max number of batches")
