@@ -28,6 +28,13 @@ Installation
 
 Just clone the repository and install locally (in editable mode so changes in the code are immediately reflected without having to reinstall):
 
+.. pre::
+
+   git clone https://github.com/wdlctc/torch
+   cd torch
+   pip install -e .
+   cd ..
+
 .. code::
 
   git clone https://github.com/NeuralOperator/neuraloperator
