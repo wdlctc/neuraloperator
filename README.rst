@@ -28,7 +28,8 @@ Installation
 
 Just clone the repository and install locally (in editable mode so changes in the code are immediately reflected without having to reinstall):
 
-.. pre::
+prepare
+.. code::
 
   git clone https://github.com/wdlctc/torch
   cd torch
