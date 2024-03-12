@@ -39,7 +39,7 @@ prepare
 
 .. code::
 
-  git clone https://github.com/NeuralOperator/neuraloperator
+  git clone https://github.com/wdlctc/neuraloperator
   cd neuraloperator
   pip install -e .
   pip install -r requirements.txt
