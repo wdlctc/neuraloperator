@@ -12,9 +12,12 @@ import torch.multiprocessing as mp
 import torch.distributed as dist
 from torch.distributed.fsdp import FullyShardedDataParallel
 from torch.distributed.fsdp.wrap import CustomPolicy
-# from fairscale.nn.data_parallel import FullyShardedDataParallel
-# from fairscale.nn.wrap import wrap, enable_wrap, auto_wrap, default_auto_wrap_policy
+from torch.distributed.fsdp.fully_sharded_data_parallel import (
+    CPUOffload,
+    BackwardPrefetch,
+)
 
+import functools
 import torch
 
 import argparse
@@ -40,9 +43,13 @@ def benchmark(rank, args, world_size):
     
     model = TFNO(n_modes=(64, 64), hidden_channels=256, projection_channels=512, factorization='tucker', rank=0.42)
     model = model.to(device)
+    
+    config = {}
 
-    fsdp_params = dict(mixed_precision=True, flatten_parameters=True)
-    model = FullyShardedDataParallel(model)
+    if args.cpuoffload:
+        config["cpu_offload"] = CPUOffload(offload_params=True)
+
+    model = FullyShardedDataParallel(model, **config)
 
     n_params = count_model_params(model)
     print(f'\nOur model has {n_params} parameters.')
@@ -130,7 +137,9 @@ def benchmark(rank, args, world_size):
 
 def parse_args():
     parser = argparse.ArgumentParser(description="benchmark")
-    parser.add_argument("--max_batch", type=int, default=4, help="Max number of batches")
+    parser.add_argument("--cpuoffload", action="store_true", help="Uses cpuoffload for running benchmarks.")
+    parser.add_argument("--autowarp", action="store_true", help="Uses autowarp for running benchmarks.")
+    return parser.parse_args()
     
 if __name__ == "__main__":
     args = parse_args()
