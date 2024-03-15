@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import matplotlib.pyplot as plt
 import sys
+import time
 from neuralop.models import TFNO
 from neuralop import Trainer
 from neuralop.datasets import load_darcy_flow_small
@@ -37,6 +38,7 @@ def benchmark(rank, args, world_size):
     data_processor = data_processor.to(device)
     
     model = TFNO(n_modes=(64, 64), hidden_channels=256, projection_channels=512, factorization='tucker', rank=0.42)
+    # model = TFNO(n_modes=(128, 128), hidden_channels=256, projection_channels=512, factorization='tucker', rank=0.42)
     model = model.to(device)
     
     for param_name, param in model.named_parameters():
@@ -67,7 +69,7 @@ def benchmark(rank, args, world_size):
     print(f'\n * Test: {eval_losses}')
     sys.stdout.flush()
     
-    trainer = Trainer(model=model, n_epochs=20,
+    trainer = Trainer(model=model, n_epochs=100,
                       device=device,
                       data_processor=data_processor,
                       wandb_log=False,
@@ -75,6 +77,7 @@ def benchmark(rank, args, world_size):
                       use_distributed=True,
                       verbose=True)
     
+    epoch_start_time = time.time()
     trainer.train(train_loader=train_loader,
                   test_loaders=test_loaders,
                   optimizer=optimizer,
@@ -82,6 +85,8 @@ def benchmark(rank, args, world_size):
                   regularizer=False,
                   training_loss=train_loss,
                   eval_losses=eval_losses)
+    wps = 100 / (time.time() - epoch_start_time)
+    print("Throughput(wps) is {:.2f}.".format(wps))
     
     test_samples = test_loaders[32].dataset
     
