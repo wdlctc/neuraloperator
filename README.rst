@@ -32,7 +32,7 @@ prepare
 
 .. code::
 
-  git clone https://github.com/wdlctc/torch
+  git clone https://github.com/wdlctc/tltorch
   cd torch
   pip install -e .
   cd ..
